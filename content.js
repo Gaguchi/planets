@@ -43,8 +43,34 @@ let lastAnimatedIndex = -1; // Initialize to -1 to indicate no sections have bee
 const currentSectionDisplay = document.getElementById('current-section');
 
 const animateOnScroll = (event) => {
-  const newScrollPosition = lastKnownScrollPosition + event.deltaY;
+  let newScrollPosition = lastKnownScrollPosition + event.deltaY;
   console.log(`Scroll distance: ${newScrollPosition}`);
+
+  // Reset newScrollPosition if it exceeds 4000 or goes into negative
+  if (newScrollPosition > 4000) {
+    newScrollPosition = 0;
+  } else if (newScrollPosition < 0) {
+    newScrollPosition = 4000;
+  }
+
+  // Log messages for specific scroll distances
+  switch (newScrollPosition) {
+    case 600:
+      console.log("This is where section one will be");
+      break;
+    case 1600:
+      console.log("This is where section two will be");
+      break;
+    case 2500:
+      console.log("This is where section three will be");
+      break;
+    case 3600:
+      console.log("This is where section four will be");
+      break;
+    default:
+      // No default action needed
+      break;
+  }
 
   const isScrollingDown = newScrollPosition > lastKnownScrollPosition;
 
@@ -61,7 +87,7 @@ const animateOnScroll = (event) => {
 
       const orderedSections = isScrollingDown ? sections : [...sections].reverse();
 
-      orderedSections.some(({ panel, top }, index) => { // Use `some` to break loop once a section is found
+      orderedSections.some(({ panel, top }, index) => {
         const actualIndex = isScrollingDown ? index : sections.length - 1 - index;
         const isInViewport = scrollPosition >= top - window.innerHeight * 0.8 && scrollPosition < top + panel.offsetHeight;
         const shouldAnimate = isScrollingDown ? actualIndex > lastAnimatedIndex : actualIndex < lastAnimatedIndex;
