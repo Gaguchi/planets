@@ -15,43 +15,6 @@ let sections = calculatePositions();
 let lastKnownScrollPosition = 0;
 let ticking = false;
 
-const animateOnWheel = (event) => {
-  // Update the lastKnownScrollPosition based on wheel event deltaY
-  // Note: This does not actually scroll the page. It's just for triggering animations.
-  lastKnownScrollPosition += event.deltaY;
-
-  if (!ticking) {
-    window.requestAnimationFrame(() => {
-      const scrollPosition = lastKnownScrollPosition;
-      console.log(`Scroll position: ${scrollPosition}`); // Debugging log to confirm wheel event
-
-      sections.forEach(({ panel, top }, index) => {
-        if (scrollPosition >= top - window.innerHeight * 0.8 && panel.dataset.animated !== 'true') {
-          console.log(`Animating section ${index + 1}`);
-          gsap.fromTo(panel, 
-            { opacity: 0, y: 100 }, // From state
-            { opacity: 1, y: 0, duration: 1, ease: 'power2.out' } // To state
-          );
-          panel.dataset.animated = 'true'; // Mark as animated
-        }
-      });
-
-      ticking = false;
-    });
-
-    ticking = true;
-  }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  sections = calculatePositions();
-  window.addEventListener('wheel', animateOnWheel);
-  console.log('Wheel listener attached.'); // Confirm attachment of the wheel event
-});
-
-document.addEventListener('touchstart', handleTouchStart, false);        
-document.addEventListener('touchmove', handleTouchMove, false);
-
 let touchStartY = 0;
 let touchEndY = 0;
 
@@ -74,36 +37,66 @@ function handleTouchMove(event) {
     touchStartY = touchEndY;
 }
 
-function animateOnScroll(event) {
-    // Your existing animateOnWheel function with a more generic name
-    // Update the lastKnownScrollPosition based on event deltaY
-    lastKnownScrollPosition += event.deltaY;
+let lastAnimatedIndex = -1; // Initialize to -1 to indicate no sections have been animated
 
-    if (!ticking) {
-        window.requestAnimationFrame(() => {
-            const scrollPosition = lastKnownScrollPosition;
+// Step 2: Select the element where you want to display the current section
+const currentSectionDisplay = document.getElementById('current-section');
 
-            sections.forEach(({ panel, top }, index) => {
-                if (scrollPosition >= top - window.innerHeight * 0.8 && panel.dataset.animated !== 'true') {
-                    console.log(`Animating section ${index + 1}`);
-                    gsap.fromTo(panel, 
-                        { opacity: 0, y: 100 }, // From state
-                        { opacity: 1, y: 0, duration: 1, ease: 'power2.out' } // To state
-                    );
-                    panel.dataset.animated = 'true'; // Mark as animated
-                }
-            });
+const animateOnScroll = (event) => {
+  const newScrollPosition = lastKnownScrollPosition + event.deltaY;
+  console.log(`Scroll distance: ${newScrollPosition}`);
 
-            ticking = false;
-        });
+  const isScrollingDown = newScrollPosition > lastKnownScrollPosition;
 
-        ticking = true;
-    }
-}
+  if (!ticking) {
+    window.requestAnimationFrame(() => {
+      lastKnownScrollPosition = newScrollPosition;
+      const scrollPosition = lastKnownScrollPosition;
 
-// Rename the existing animateOnWheel function to animateOnScroll and replace its calls
+      // Hide all sections before determining which one to show
+      sections.forEach(({ panel }) => {
+        gsap.to(panel, { opacity: 0, duration: 0.5 });
+        panel.dataset.animated = 'false';
+      });
+
+      const orderedSections = isScrollingDown ? sections : [...sections].reverse();
+
+      orderedSections.some(({ panel, top }, index) => { // Use `some` to break loop once a section is found
+        const actualIndex = isScrollingDown ? index : sections.length - 1 - index;
+        const isInViewport = scrollPosition >= top - window.innerHeight * 0.8 && scrollPosition < top + panel.offsetHeight;
+        const shouldAnimate = isScrollingDown ? actualIndex > lastAnimatedIndex : actualIndex < lastAnimatedIndex;
+
+        if (isInViewport && shouldAnimate) {
+          console.log(`Animating section ${actualIndex + 1} at scroll position: ${scrollPosition}`);
+          gsap.fromTo(panel, 
+            { opacity: 0, y: isScrollingDown ? 100 : -100 },
+            { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }
+          );
+          panel.dataset.animated = 'true';
+          lastAnimatedIndex = actualIndex;
+
+          // Update the current section display
+          if (currentSectionDisplay) {
+            currentSectionDisplay.textContent = `Current Section: ${panel.dataset.section}`;
+          }
+
+          return true; // Break the loop after animating the current section
+        }
+        return false; // Continue loop if current section is not animated
+      });
+
+      ticking = false;
+    });
+
+    ticking = true;
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    sections = calculatePositions();
-    window.addEventListener('wheel', animateOnScroll);
-    console.log('Wheel and touch listeners attached.'); // Confirm attachment of the wheel and touch events
+  sections = calculatePositions();
+  window.addEventListener('wheel', animateOnScroll);
+  console.log('Wheel and touch listeners attached.'); // Confirm attachment of the wheel and touch events
 });
+
+document.addEventListener('touchstart', handleTouchStart, false);        
+document.addEventListener('touchmove', handleTouchMove, false);

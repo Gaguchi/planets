@@ -55,13 +55,16 @@ h1 {
   text-align: center;
 }
 
+
 .panel {
+  display: none;
   height: 100vh;
-  display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 2em;
-  opacity: 0; /* Start them off as invisible */
+  text-align: center;
+}
+.visible {
+  display: flex;
 }
 
 .logo {
