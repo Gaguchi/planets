@@ -5,7 +5,7 @@ import './style.css'; // Assuming you want to keep the styles
 // Setup the scene, camera, and renderer
 const scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.style.position = 'fixed'; // Set the canvas to have a fixed position
 renderer.domElement.style.top = '0px'; // Set the canvas to be at the top of the viewport
@@ -47,7 +47,7 @@ if (gltf.animations && gltf.animations.length) {
     mixer = new THREE.AnimationMixer(scene);
     sphereMixer = new THREE.AnimationMixer(scene);
     // List of animation names for sphereMixer
-    const sphereAnimations = ['Sphere.001Action', 'ship_animation_01'];
+    const sphereAnimations = ['Sphere.001Action', 'ship_animation_01', 'signAnimation'];
     gltf.animations.forEach((clip) => {
         if (clip.tracks.some(track => track.name.includes('Camera'))) {
             const action = mixer.clipAction(clip);
@@ -142,17 +142,54 @@ function debounce(func, timeout = 300) {
     };
 }
 
+
+// Modify the createStars function to immediately add stars to the scene
+function createStars(numberOfStars = 10000, sizeVariation = 0.7) {
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsVertices = [];
+
+    for (let i = 0; i < numberOfStars; i++) {
+        const x = THREE.MathUtils.randFloatSpread(2000); // spread in x
+        const y = THREE.MathUtils.randFloatSpread(2000); // spread in y
+        const z = THREE.MathUtils.randFloatSpread(2000); // spread in z
+
+        starsVertices.push(x, y, z);
+    }
+
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: sizeVariation });
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    stars.name = 'stars'; // Assign a name for easy identification
+
+    return stars;
+}
+
+// Initial creation of stars
+const initialStars = createStars(20000, 1.0); // Adjust number and size as needed
+scene.add(initialStars);
+
+
 // Enhanced resize event handling
+// Enhanced resize event handling with proper star update
 window.addEventListener('resize', debounce(() => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-}));
 
-// Example easing function for smoother transitions (linear here, but consider more complex functions)
-function easeInOutQuad(t) {
-    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-}
+    // Ensure stars are correctly displayed after resize
+    // Check if stars already exist in the scene and remove them
+    let existingStars = scene.getObjectByName('stars');
+    if (existingStars) {
+        scene.remove(existingStars);
+    }
+
+    // Recreate stars to ensure they are correctly displayed after resize
+    // Adjust the number of stars and size as needed for better visibility
+    const stars = createStars(1000000, 1.0); // Example: Increase number of stars
+    stars.name = 'stars'; // Assign a name for easy identification
+    scene.add(stars);
+}, 250)); // Adjust debounce timeout as needed
+
 
 setTimeout(() => {
     window.dispatchEvent(new Event('resize'));

@@ -52,69 +52,85 @@ const animateOnScroll = (event) => {
   } else if (newScrollPosition < 0) {
     newScrollPosition = 4000;
   }
+// Determine the current section based on the scroll position and apply/remove classes accordingly
+const sectionRanges = [
+  { id: "#section1", start: 300, end: 900 },
+  { id: "#section2", start: 1300, end: 1900 },
+  { id: "#section3", start: 2200, end: 2800 },
+  { id: "#section4", start: 3300, end: 3900 }
+];
 
-  // Log messages for specific scroll distances
-  switch (newScrollPosition) {
-    case 600:
-      console.log("This is where section one will be");
-      break;
-    case 1600:
-      console.log("This is where section two will be");
-      break;
-    case 2500:
-      console.log("This is where section three will be");
-      break;
-    case 3600:
-      console.log("This is where section four will be");
-      break;
-    default:
-      // No default action needed
-      break;
+sectionRanges.forEach(({ id, start, end }) => {
+  const section = document.querySelector(id);
+  if (!section) {
+    console.log(`Section ${id} not found.`);
+    return; // Skip this iteration if the section is not found
   }
 
+  if (newScrollPosition >= start && newScrollPosition <= end) {
+    if (!section.classList.contains("visible")) {
+      console.log(`Entering ${id}`);
+      gsap.to(id, { opacity: 1, duration: 1, ease: 'power2.out' });
+      section.classList.add("visible", "enter");
+    }
+  } else {
+    if (section.classList.contains("visible")) {
+      console.log(`Exiting ${id}`);
+      section.classList.remove("visible", "enter");
+      // Optionally, animate opacity to 0 or other exit animations
+    }
+  }
+});
   const isScrollingDown = newScrollPosition > lastKnownScrollPosition;
 
   if (!ticking) {
-    window.requestAnimationFrame(() => {
-      lastKnownScrollPosition = newScrollPosition;
-      const scrollPosition = lastKnownScrollPosition;
+      window.requestAnimationFrame(() => {
+        lastKnownScrollPosition = newScrollPosition;
+        const scrollPosition = lastKnownScrollPosition;
 
-      // Hide all sections before determining which one to show
-      sections.forEach(({ panel }) => {
-        gsap.to(panel, { opacity: 0, duration: 0.5 });
-        panel.dataset.animated = 'false';
-      });
-
-      const orderedSections = isScrollingDown ? sections : [...sections].reverse();
-
-      orderedSections.some(({ panel, top }, index) => {
-        const actualIndex = isScrollingDown ? index : sections.length - 1 - index;
-        const isInViewport = scrollPosition >= top - window.innerHeight * 0.8 && scrollPosition < top + panel.offsetHeight;
-        const shouldAnimate = isScrollingDown ? actualIndex > lastAnimatedIndex : actualIndex < lastAnimatedIndex;
-
-        if (isInViewport && shouldAnimate) {
-          console.log(`Animating section ${actualIndex + 1} at scroll position: ${scrollPosition}`);
-          gsap.fromTo(panel, 
-            { opacity: 0, y: isScrollingDown ? 100 : -100 },
-            { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }
-          );
-          panel.dataset.animated = 'true';
-          lastAnimatedIndex = actualIndex;
-
-          // Update the current section display
-          if (currentSectionDisplay) {
-            currentSectionDisplay.textContent = `Current Section: ${panel.dataset.section}`;
+        // Hide all sections before determining which one to show
+        sections.forEach(({ panel }) => {
+          if (panel && panel.dataset.section) {
+            gsap.to(panel, { opacity: 0, duration: 0.5 });
+            panel.dataset.animated = 'false';
+          } else {
+            console.log("Hey, the section is undefined");
           }
+        });
 
-          return true; // Break the loop after animating the current section
-        }
-        return false; // Continue loop if current section is not animated
+        const orderedSections = isScrollingDown ? sections : [...sections].reverse();
+
+        orderedSections.some(({ panel, top }, index) => {
+          if (!panel) {
+            console.log("Hey, the section is undefined");
+            return false; // Skip to the next iteration if panel is undefined
+          }
+          const actualIndex = isScrollingDown ? index : sections.length - 1 - index;
+          const isInViewport = scrollPosition >= top - window.innerHeight * 0.8 && scrollPosition < top + panel.offsetHeight;
+          const shouldAnimate = isScrollingDown ? actualIndex > lastAnimatedIndex : actualIndex < lastAnimatedIndex;
+          if (isInViewport && shouldAnimate) {
+            console.log(`Animating section ${actualIndex + 1} at scroll position: ${scrollPosition}`);
+            gsap.fromTo(panel, 
+              { opacity: 0, y: isScrollingDown ? 100 : -100 },
+              { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }
+            );
+            panel.dataset.animated = 'true';
+            lastAnimatedIndex = actualIndex;
+
+            // Update the current section display
+            if (currentSectionDisplay && panel.dataset.section) {
+              currentSectionDisplay.textContent = `Current Section: ${panel.dataset.section}`;
+            }
+
+            return true; // Break the loop after animating the current section
+          }
+          return false; // Continue loop if current section is not animated
+        });
+
+        ticking = false;
       });
 
-      ticking = false;
-    });
-
-    ticking = true;
+      ticking = true;
   }
 };
 
