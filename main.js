@@ -47,14 +47,26 @@ if (gltf.animations && gltf.animations.length) {
     mixer = new THREE.AnimationMixer(scene);
     sphereMixer = new THREE.AnimationMixer(scene);
     // List of animation names for sphereMixer
-    const sphereAnimations = ['Sphere.001Action', 'ship_animation_01', 'signAnimation'];
+    const sphereAnimations = [
+        { name: 'planet_spin_1', speed: 2 },
+        { name: 'planet_spin_2', speed: 0.5 },
+        { name: 'planet_spin_3', speed: 1.5 },
+        { name: 'planet_spin_4', speed: 1 },
+        { name: 'ship_animation_01', speed: 2.8 },
+        { name: 'signAnimation', speed: 1 },
+        { name: 'RnMAction', speed: 5 }
+    ];
     gltf.animations.forEach((clip) => {
         if (clip.tracks.some(track => track.name.includes('Camera'))) {
             const action = mixer.clipAction(clip);
             action.play();
-        } else if (sphereAnimations.includes(clip.name)) {
-            const action = sphereMixer.clipAction(clip);
-            action.play();
+        } else {
+            const animation = sphereAnimations.find(a => a.name === clip.name);
+            if (animation) {
+                const action = sphereMixer.clipAction(clip);
+                action.setEffectiveTimeScale(animation.speed); // Adjust the speed
+                action.play();
+            }
         }
     });
 }
