@@ -76,8 +76,15 @@ sectionRanges.forEach(({ id, start, end }) => {
   } else {
     if (section.classList.contains("visible")) {
       console.log(`Exiting ${id}`);
-      section.classList.remove("visible", "enter");
-      // Optionally, animate opacity to 0 or other exit animations
+      section.classList.add("exit"); // Add exit class
+      gsap.to(id, {
+        opacity: 0,
+        duration: 1,
+        ease: 'power2.in',
+        onComplete: () => {
+          section.classList.remove("visible", "enter", "exit"); // Remove classes after animation
+        }
+      });
     }
   }
 });
