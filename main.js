@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'; // Import DRACOLoader
 import './style.css'; // Assuming you want to keep the styles
 
 // Setup the scene, camera, and renderer
@@ -31,7 +32,12 @@ let mixer;
 let sphereMixer; // Separate mixer for the sphere animation
 
 // Load the GLTF model
+// Setup DRACOLoader
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/'); // Set the path to DRACO decoder files
 const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader); // Set DRACOLoader instance
+
 loader.load('models/planets.glb', function (gltf) {
     scene.add(gltf.scene);
 
