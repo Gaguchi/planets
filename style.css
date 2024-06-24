@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -33,6 +36,135 @@ body {
 }
 
 
+body {
+    font-family: 'Press Start 2P', cursive;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    background-color: #fff;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    animation: twinkle 5s infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.modal {
+    background-color: #2a2a4a;
+    border: 4px solid #4a4a7a;
+    border-radius: 15px;
+    box-shadow: 
+        0 0 0 4px #1a1a3a, 
+        0 0 0 8px #3a3a6a,
+        0 10px 20px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    width: 320px;
+    position: relative;
+    transform: perspective(1000px) rotateX(5deg);
+    transition: transform 0.3s ease;
+}
+
+.modal:hover {
+    transform: perspective(1000px) rotateX(0deg) scale(1.05);
+}
+
+h2 {
+    color: #FFD700;
+    text-align: center;
+    margin-top: 0;
+    font-size: 18px;
+    text-shadow: 
+        2px 2px #8B4513,
+        4px 4px #2a2410;
+}
+
+p {
+    color: #FFD700;
+    text-align: justify;
+    line-height: 1.6;
+    font-size: 12px;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px #2a2410;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-around;
+}
+
+button {
+    font-family: 'Press Start 2P', cursive;
+    background-color: #50d0f0;
+    border: none;
+    color: #102050;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 
+        inset -4px -4px 0px 0px #2050a0,
+        0 5px 10px rgba(0, 0, 0, 0.3);
+    position: relative;
+    top: 0;
+}
+
+button:hover {
+    background-color: #70f0ff;
+    color: #203070;
+}
+
+button:active {
+    box-shadow: 
+        inset 4px 4px 0px 0px #2050a0,
+        0 2px 5px rgba(0, 0, 0, 0.3);
+    top: 3px;
+}
+
+.modal-content {
+    position: relative;
+    z-index: 1;
+    background-color: rgba(40, 40, 80, 0.6);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.pixel-border {
+    height: 4px;
+    background: repeating-linear-gradient(
+        to right,
+        #50d0f0,
+        #50d0f0 4px,
+        #2050a0 4px,
+        #2050a0 8px
+    );
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 body::-webkit-scrollbar {
   display: none; /* For Chrome, Safari, and Opera */
 }
@@ -58,7 +190,7 @@ h1 {
 
 .panel {
   display: none;
-  height: 100vh;
+  height: 0px;
   justify-content: center;
   align-items: center;
   text-align: center;
@@ -86,38 +218,6 @@ h1 {
 
 .read-the-docs {
   color: #888;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
 
 

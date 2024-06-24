@@ -54,10 +54,10 @@ const animateOnScroll = (event) => {
   }
 // Determine the current section based on the scroll position and apply/remove classes accordingly
 const sectionRanges = [
-  { id: "#section1", start: 300, end: 900 },
-  { id: "#section2", start: 1300, end: 1900 },
-  { id: "#section3", start: 2200, end: 2800 },
-  { id: "#section4", start: 3300, end: 3900 }
+  { id: "#section1", start: 150, end: 450 },
+  { id: "#section2", start: 850, end: 1450 },
+  { id: "#section3", start: 1850, end: 2500 },
+  { id: "#section4", start: 3000, end: 3500 }
 ];
 
 sectionRanges.forEach(({ id, start, end }) => {
