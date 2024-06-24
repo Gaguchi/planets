@@ -47,10 +47,10 @@ loader.load('models/planets.glb', function (gltf) {
         mixer = new THREE.AnimationMixer(scene);
         sphereMixer = new THREE.AnimationMixer(scene);
         const sphereAnimations = [
-            { name: 'planet_spin_1', speed: 2 },
-            { name: 'planet_spin_2', speed: 0.5 },
-            { name: 'planet_spin_3', speed: 1.5 },
-            { name: 'planet_spin_4', speed: 1 },
+            { name: 'planet_spin_1', speed: 3 },
+            { name: 'planet_spin_2', speed: 3 },
+            { name: 'planet_spin_3', speed: 3 },
+            { name: 'planet_spin_4', speed: 3 },
             { name: 'ship_animation_01', speed: 2.8 },
             { name: 'signAnimation', speed: 1 },
             { name: 'RnMAction', speed: 5 }
