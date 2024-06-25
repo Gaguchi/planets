@@ -16,8 +16,9 @@ renderer.domElement.style.top = '0px';
 renderer.domElement.style.zIndex = '-1';
 document.body.appendChild(renderer.domElement);
 let cameraAction;
-let planet1; // Declare a variable to hold the planet1 object
-let planet1Camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+let assetsLoaded = false;
+let windowResized = false;
+
 
 const controls = new OrbitControls(camera, renderer.domElement); // Create OrbitControls instance
 controls.enabled = false; // Disable controls initially
@@ -101,6 +102,8 @@ loader.load('models/planets.glb', function (gltf) {
     }
 
     animate();
+    assetsLoaded = true;
+    checkPreloader();
 }, undefined, function (error) {
     console.error(error);
 });
@@ -219,7 +222,7 @@ function createStars(numberOfStars = 10000, sizeVariation = 0.7) {
 const initialStars = createStars(20000, 1.0);
 scene.add(initialStars);
 
-window.addEventListener('resize', debounce(() => {
+window.addEventListener('resize orientationchange', debounce(() => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -232,8 +235,32 @@ window.addEventListener('resize', debounce(() => {
     const stars = createStars(1000000, 1.0);
     stars.name = 'stars';
     scene.add(stars);
+    windowResized = true;
+    checkPreloader();
 }, 250));
 
+function checkPreloader() {
+    if (assetsLoaded && windowResized) {
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            preloader.style.display = 'none';
+        }
+    }
+
+    // Dispatch a resize event manually only if assets have loaded and window hasn't been resized yet
+    if (assetsLoaded && !windowResized) {
+        window.dispatchEvent(new Event('resize'));
+        windowResized = true; // Set windowResized to true to prevent further resize events
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            preloader.style.opacity = 0;
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500); // Delay the removal to allow for the opacity transition
+        }
+    }
+}
+
 setTimeout(() => {
-    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event('orientationchange'));
 }, 100);

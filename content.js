@@ -46,20 +46,37 @@ const animateOnScroll = (event) => {
   let newScrollPosition = lastKnownScrollPosition + event.deltaY;
   console.log(`Scroll distance: ${newScrollPosition}`);
 
-  // Reset newScrollPosition if it exceeds 4000 or goes into negative
-  if (newScrollPosition > 4000) {
+  let maxScrollPosition = window.innerWidth <= 768 ? 2750 : 4000; // 768px is a common breakpoint for mobile devices
+
+  // Reset newScrollPosition if it exceeds maxScrollPosition or goes into negative
+  if (newScrollPosition > maxScrollPosition) {
     newScrollPosition = 0;
   } else if (newScrollPosition < 0) {
-    newScrollPosition = 4000;
+    newScrollPosition = maxScrollPosition;
   }
-// Determine the current section based on the scroll position and apply/remove classes accordingly
-const sectionRanges = [
-  { id: "#section1", start: 150, end: 450 },
-  { id: "#section2", start: 850, end: 1450 },
-  { id: "#section3", start: 1850, end: 2500 },
-  { id: "#section4", start: 3000, end: 3500 }
-];
 
+  // Update the debugging panel
+  updateDebugPanel();
+
+let sectionRanges;
+
+if (window.innerWidth <= 768) { // 768px is a common breakpoint for mobile devices
+  // Adjust the section ranges for mobile devices
+  sectionRanges = [
+    { id: "#section1", start: 100, end: 250 },
+    { id: "#section2", start: 530, end: 930 },
+    { id: "#section3", start: 1200, end: 1620 },
+    { id: "#section4", start: 1920, end: 2330 }
+  ];
+} else {
+  // Use the original section ranges for larger devices
+  sectionRanges = [
+    { id: "#section1", start: 100, end: 400 },
+    { id: "#section2", start: 800, end: 1400 },
+    { id: "#section3", start: 1800, end: 2400 },
+    { id: "#section4", start: 3000, end: 3400 }
+  ];
+}
 sectionRanges.forEach(({ id, start, end }) => {
   const section = document.querySelector(id);
   if (!section) {
@@ -149,3 +166,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('touchstart', handleTouchStart, false);        
 document.addEventListener('touchmove', handleTouchMove, false);
+
+// Create a debugging panel
+const debugPanel = document.createElement('div');
+debugPanel.style.position = 'fixed';
+debugPanel.style.bottom = '0';
+debugPanel.style.left = '0';
+debugPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+debugPanel.style.color = 'white';
+debugPanel.style.padding = '10px';
+debugPanel.style.zIndex = '9999'; // Ensure the panel is always on top
+document.body.appendChild(debugPanel);
+
+// Update the debugging panel
+const updateDebugPanel = () => {
+  debugPanel.textContent = `innerWidth: ${window.innerWidth}, scrollPosition: ${lastKnownScrollPosition}`;
+};
+
+// Call updateDebugPanel whenever the window is resized or scrolled
+window.addEventListener('resize', updateDebugPanel);
+window.addEventListener('scroll', updateDebugPanel);
+
+// Call updateDebugPanel initially to display the initial values
+updateDebugPanel();
