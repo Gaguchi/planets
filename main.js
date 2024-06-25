@@ -4,6 +4,9 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // Import OrbitControls
 import './style.css';
 
+// Add an element to the HTML to display the FPS
+document.body.innerHTML += '<div id="fps" style="position: absolute; top: 10px; left: 10px; color: white;"></div>';
+
 const scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -33,6 +36,14 @@ dracoLoader.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
+// FPS Tracker
+let fps = 0, frames = 0, lastTime = performance.now();
+
+// Framerate limiter
+let lastRenderTime = performance.now();
+const maxFPS = 120; // Define your maximum FPS here
+const minDeltaTime = 1000 / maxFPS; // Minimum time interval between frames
+
 loader.load('models/planets.glb', function (gltf) {
     scene.add(gltf.scene);
     console.log(scene.children);
@@ -47,13 +58,13 @@ loader.load('models/planets.glb', function (gltf) {
         mixer = new THREE.AnimationMixer(scene);
         sphereMixer = new THREE.AnimationMixer(scene);
         const sphereAnimations = [
-            { name: 'planet_spin_1', speed: 3 },
-            { name: 'planet_spin_2', speed: 3 },
-            { name: 'planet_spin_3', speed: 3 },
-            { name: 'planet_spin_4', speed: 3 },
-            { name: 'ship_animation_01', speed: 2.8 },
-            { name: 'signAnimation', speed: 1 },
-            { name: 'RnMAction', speed: 5 }
+            { name: 'planet_spin_1', speed: 6 },
+            { name: 'planet_spin_2', speed: 6 },
+            { name: 'planet_spin_3', speed: 6 },
+            { name: 'planet_spin_4', speed: 6 },
+            { name: 'ship_animation_01', speed: 6 },
+            { name: 'signAnimation', speed: 4 },
+            { name: 'RnMAction', speed: 8 }
         ];
         gltf.animations.forEach((clip) => {
             if (clip.name === 'CameraAction') {
@@ -110,22 +121,41 @@ document.addEventListener('wheel', (event) => {
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+    const currentTime = performance.now();
+    const deltaTime = currentTime - lastRenderTime;
 
-    if (mixer) {
-        currentAnimationTime += (targetAnimationTime - currentAnimationTime) * 0.05;
-        mixer.setTime(currentAnimationTime);
-        // console.log('animate function:', currentAnimationTime); // Debug log
+    if (deltaTime >= minDeltaTime) {
+        const delta = clock.getDelta();
+
+        if (mixer) {
+            currentAnimationTime += (targetAnimationTime - currentAnimationTime) * 0.05;
+            mixer.setTime(currentAnimationTime);
+        }
+
+        if (sphereMixer) {
+            const fixedUpdateRate = 0.0005;
+            sphereMixer.update(fixedUpdateRate);
+        }
+
+        controls.update(); // Update controls
+
+        renderer.render(scene, camera);
+
+        // FPS Tracker
+        frames++;
+        const currentTime = performance.now();
+        if (currentTime > lastTime + 1000) {
+            fps = frames;
+            frames = 0;
+            lastTime = currentTime;
+        }
+        const fpsElement = document.getElementById('fps');
+        if (fpsElement) {
+            fpsElement.innerText = `FPS: ${fps}`;
+        }
+
+        lastRenderTime = currentTime; // Update the timestamp of the last rendered frame
     }
-
-    if (sphereMixer) {
-        const fixedUpdateRate = 0.0005;
-        sphereMixer.update(fixedUpdateRate);
-    }
-
-    controls.update(); // Update controls
-
-    renderer.render(scene, camera);
 }
 
 animate();
