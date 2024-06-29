@@ -1,4 +1,6 @@
 import gsap from 'gsap';
+import { checkPlanetInView } from './main';
+
 
 const calculatePositions = () => {
   const panels = Array.from(document.querySelectorAll('.panel'));
@@ -104,6 +106,9 @@ sectionRanges.forEach(({ id, start, end }) => {
       });
     }
   }
+
+    // Step 3: Trigger checkPlanetInView on scroll
+    checkPlanetInView();
 });
   const isScrollingDown = newScrollPosition > lastKnownScrollPosition;
 

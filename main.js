@@ -127,6 +127,7 @@ function animate() {
     const currentTime = performance.now();
     const deltaTime = currentTime - lastRenderTime;
 
+
     if (deltaTime >= minDeltaTime) {
         const delta = clock.getDelta();
 
@@ -162,6 +163,34 @@ function animate() {
 }
 
 animate();
+
+// Step 1: Wrap the frustum check code into a function
+export const checkPlanetInView = () => {
+    const frustum = new THREE.Frustum();
+    const cameraViewProjectionMatrix = new THREE.Matrix4();
+
+    // Combine the camera's view matrix and projection matrix
+    cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+
+    // Assuming planet_3 is the variable holding your group
+    const planet_3 = scene.getObjectByName('planet_3');
+
+    if (planet_3) {
+        // Create an AABB for planet_3 and check for intersection with the frustum
+        const box = new THREE.Box3().setFromObject(planet_3);
+
+        if (frustum.intersectsBox(box)) {
+            console.log("planet 3 is on the screen");
+        } else {
+            console.log("planet 3 is not on the screen");
+        }
+    } else {
+        console.log("planet_3 is undefined");
+    }
+}
+// Step 2: Add an event listener for the scroll event
+window.addEventListener('scroll', checkPlanetInView);
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
