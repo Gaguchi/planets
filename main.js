@@ -24,7 +24,7 @@ dracoLoader.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
-let mixer, cameraAction, planet1, assetsLoaded = false, windowResized = false;
+let mixer,sphereMixer, cameraAction, planet1, assetsLoaded = false, windowResized = false;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -43,18 +43,31 @@ loader.load('models/planets.glb', function (gltf) {
         if (object.name === 'planet_1') planet1 = object;
     });
 
-    if (gltf.animations.length) {
+    if (gltf.animations && gltf.animations.length) {
         mixer = new THREE.AnimationMixer(scene);
-        const actions = [];
-        gltf.animations.forEach(clip => {
+        sphereMixer = new THREE.AnimationMixer(scene);
+        const sphereAnimations = [
+            //{ name: 'planet_spin_1', speed: 3 },
+            //{ name: 'planet_spin_2', speed: 3 },
+            //{ name: 'planet_spin_3', speed: 3 },
+            //{ name: 'planet_spin_4', speed: 3 },
+            { name: 'ship_animation_01', speed: 10 },
+            { name: 'signAnimation', speed: 10 },
+            { name: 'RnMAction', speed: 12 }
+        ];
+        gltf.animations.forEach((clip) => {
             if (clip.name === 'CameraAction') {
                 cameraAction = mixer.clipAction(clip);
                 cameraAction.play();
-            } else if (clip.name !== 'planet_spin_1') { // Remove planet_spin_1 animation
-                actions.push(mixer.clipAction(clip));
+            } else {
+                const animation = sphereAnimations.find(a => a.name === clip.name);
+                if (animation) {
+                    const action = sphereMixer.clipAction(clip);
+                    action.setEffectiveTimeScale(animation.speed);
+                    action.play();
+                }
             }
         });
-        actions.forEach(action => action.play());
     }
 
     renderer.domElement.addEventListener('mousedown', onMouseDown);
@@ -79,7 +92,6 @@ document.addEventListener('wheel', event => {
 });
 
 document.addEventListener('touchstart', event => {
-    // Capture initial touch coordinates
     const touch = event.touches[0];
     lastTouchY = touch.clientY;
 
@@ -92,8 +104,9 @@ document.addEventListener('touchstart', event => {
 
     if (intersects.length > 0) {
         const touchedObject = intersects[0].object;
-        console.log('Touched object:', touchedObject);
-        console.log('Touched object id:', touchedObject.id);
+        console.log('Touch started at:', touch.clientX, touch.clientY);
+        console.log('Touched object:', touchedObject.name || touchedObject.id);
+        console.log('Planet rotation:', planet1.rotation.x, planet1.rotation.y, planet1.rotation.z);
         
         // Find the parent group of the touched object
         let parentGroup = touchedObject.parent;
@@ -126,7 +139,7 @@ document.addEventListener('touchstart', event => {
             }
         }
     }
-}, { passive: true });
+});
 
 
 
@@ -140,13 +153,24 @@ document.addEventListener('touchmove', event => {
         if (cameraAction) {
             cameraAction.time = targetAnimationTime;
         }
+
     }
 }, { passive: true });
 
 
 document.addEventListener('touchend', () => {
-    isDragging = false;
+    console.log('Touch ended');
+
+    // Final touch position
+    const finalTouchPositionX = mouse.x;
+    const finalTouchPositionY = mouse.y;
+    console.log(`Final touch position: ${finalTouchPositionX} ${finalTouchPositionY}`);
+
+    // Final planet rotation quaternion
+    const finalQuaternion = planet1.quaternion.toArray().map(value => value.toFixed(6)).join(' ');
+    console.log(`Final planet rotation: ${finalQuaternion}`);
 });
+
 
 
 
@@ -178,10 +202,14 @@ function animate() {
     if (deltaTime >= 1000 / 60) {
         const delta = clock.getDelta();
         if (mixer) mixer.setTime(currentAnimationTime += (targetAnimationTime - currentAnimationTime) * 0.05);
-        if (planet1 && !isDragging) planet1.rotation.y += 0.01; // Rotate planet_1 around Y-axis
+        if (planet1 && !isDragging) planet1.rotation.x += 0.01; // Rotate planet_1 around X-axis
         controls.update();
         renderer.render(scene, camera);
         frames++;
+        if (sphereMixer) {
+            const fixedUpdateRate = 0.0005;
+            sphereMixer.update(fixedUpdateRate);
+        }
         if (performance.now() > lastTime + 1000) {
             fps = frames;
             frames = 0;
@@ -191,6 +219,7 @@ function animate() {
         lastRenderTime = performance.now();
     }
 }
+animate();
 
 export const checkPlanetInView = () => {
     const frustum = new THREE.Frustum();
@@ -274,6 +303,10 @@ function onTouchStart(e) {
     }
 }
 
+
+let reverseYRotation = false;
+let reverseXRotation = false;
+
 function onTouchMove(e) {
     if (isDragging && e.touches.length === 1) {
         const deltaMove = {
@@ -281,15 +314,15 @@ function onTouchMove(e) {
             y: e.touches[0].clientY - previousMousePosition.y
         };
 
-        const deltaRotationQuaternion = new THREE.Quaternion()
-            .setFromEuler(new THREE.Euler(
-                deltaMove.y * 0.005, // Rotate along X-axis
-                deltaMove.x * 0.005, // Rotate along Y-axis
-                0,
-                'XYZ'
-            ));
+        // Adjust rotation based on touch direction relative to screen coordinates
+        const deltaRotation = {
+            y: -((reverseXRotation ? -1 : 1) * deltaMove.x * 0.005),
+            x: -((reverseYRotation ? -1 : 1) * deltaMove.y * 0.005)
+        };
 
-        planet1.quaternion.multiplyQuaternions(deltaRotationQuaternion, planet1.quaternion);
+        // Apply rotation to planet1
+        planet1.rotation.x += deltaRotation.y;
+        planet1.rotation.y += deltaRotation.x;
 
         previousMousePosition.x = e.touches[0].clientX;
         previousMousePosition.y = e.touches[0].clientY;
@@ -297,6 +330,14 @@ function onTouchMove(e) {
         e.preventDefault();
     }
 }
+
+
+
+
+
+
+
+
 
 function debounce(func, timeout = 300) {
     let timer;
