@@ -123,10 +123,7 @@ document.addEventListener('touchstart', event => {
             if (isPlanet) {
                 isDragging = true;
                 console.log(`isDragging: ${isDragging}`);
-            } else if (cameraAction && !isDragging) {
-                targetAnimationTime += touch.clientY * 0.001;
-                cameraAction.time = targetAnimationTime;
-            }
+            } 
         }
     }
 }, { passive: false });
@@ -136,7 +133,7 @@ document.addEventListener('touchmove', event => {
     if (!isDragging && cameraAction) {
         const touch = event.touches[0];
         const deltaY = touch.clientY - lastTouchY;
-        targetAnimationTime += deltaY * 0.001;
+        targetAnimationTime -= deltaY * 0.001;
         cameraAction.time = targetAnimationTime;
         lastTouchY = touch.clientY;
         event.preventDefault(); // Prevent default scrolling behavior
@@ -467,13 +464,6 @@ function onTouchMove(e) {
         e.preventDefault();
     }
 }
-
-
-
-
-
-
-
 
 
 function debounce(func, timeout = 300) {
