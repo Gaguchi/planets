@@ -16,23 +16,17 @@ document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enabled = false;
 
-// scene.add(new THREE.AxesHelper(5));
-// scene.add(new THREE.GridHelper(10, 10));
-
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
-let mixer,sphereMixer, cameraAction, planet1, assetsLoaded = false, windowResized = false;
+let mixer, sphereMixer, cameraAction, planet1, planet2, planet3, planet4, assetsLoaded = false, windowResized = false;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let lastRenderTime = 0;
 let isTouching = false;
-// Remove the duplicate declaration of 'lastTouchY'
-
-// Remove the duplicate declaration of 'isDragging'
 let previousMousePosition = { x: 0, y: 0 };
 
 loader.load('models/planets.glb', function (gltf) {
@@ -41,16 +35,15 @@ loader.load('models/planets.glb', function (gltf) {
     gltf.scene.traverse(object => {
         if (object.isCamera) camera = object;
         if (object.name === 'planet_1') planet1 = object;
+        if (object.name === 'planet_2') planet2 = object;
+        if (object.name === 'planet_3') planet3 = object;
+        if (object.name === 'planet_4') planet4 = object;
     });
 
     if (gltf.animations && gltf.animations.length) {
         mixer = new THREE.AnimationMixer(scene);
         sphereMixer = new THREE.AnimationMixer(scene);
         const sphereAnimations = [
-            //{ name: 'planet_spin_1', speed: 3 },
-            //{ name: 'planet_spin_2', speed: 3 },
-            //{ name: 'planet_spin_3', speed: 3 },
-            //{ name: 'planet_spin_4', speed: 3 },
             { name: 'ship_animation_01', speed: 10 },
             { name: 'signAnimation', speed: 10 },
             { name: 'RnMAction', speed: 12 }
@@ -91,11 +84,18 @@ document.addEventListener('wheel', event => {
     }
 });
 
+// New scroll event listener
+document.addEventListener('scroll', (event) => {
+    if (cameraAction && !isDragging) {
+        targetAnimationTime += window.scrollY * 0.001;
+        cameraAction.time = targetAnimationTime;
+    }
+});
+
 document.addEventListener('touchstart', event => {
     const touch = event.touches[0];
     lastTouchY = touch.clientY;
 
-    // Calculate normalized device coordinates
     mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
 
@@ -104,72 +104,123 @@ document.addEventListener('touchstart', event => {
 
     if (intersects.length > 0) {
         const touchedObject = intersects[0].object;
-        console.log('Touch started at:', touch.clientX, touch.clientY);
-        console.log('Touched object:', touchedObject.name || touchedObject.id);
-        console.log('Planet rotation:', planet1.rotation.x, planet1.rotation.y, planet1.rotation.z);
-        
-        // Find the parent group of the touched object
         let parentGroup = touchedObject.parent;
         while (parentGroup && !(parentGroup instanceof THREE.Group)) {
             parentGroup = parentGroup.parent;
         }
 
         if (parentGroup) {
-            // Check if the parent group or its ancestors match 'planet_1'
-            let isPlanet1 = false;
+            let isPlanet = false;
             let currentParent = parentGroup;
             while (currentParent) {
-                if (currentParent.name === 'planet_1') {
-                    isPlanet1 = true;
+                if (['planet_1', 'planet_2', 'planet_3', 'planet_4'].includes(currentParent.name)) {
+                    isPlanet = true;
                     break;
                 }
                 currentParent = currentParent.parent;
             }
 
-            if (isPlanet1) {
+            if (isPlanet) {
                 isDragging = true;
                 console.log(`isDragging: ${isDragging}`);
-            } else {
-                // Handle camera action for other objects or groups
-                console.log('Camera action triggered for other object or group');
+            } else if (cameraAction && !isDragging) {
                 targetAnimationTime += touch.clientY * 0.001;
-                if (cameraAction) {
-                    cameraAction.time = targetAnimationTime;
-                }
+                cameraAction.time = targetAnimationTime;
             }
         }
     }
-});
+}, { passive: false });
 
-
-
+// New touchmove event listener
 document.addEventListener('touchmove', event => {
-    if (!isDragging) {
-        const deltaY = event.touches[0].clientY - lastTouchY;
-        lastTouchY = event.touches[0].clientY;
+    if (!isDragging && cameraAction) {
+        const touch = event.touches[0];
+        const deltaY = touch.clientY - lastTouchY;
+        targetAnimationTime += deltaY * 0.001;
+        cameraAction.time = targetAnimationTime;
+        lastTouchY = touch.clientY;
+        event.preventDefault(); // Prevent default scrolling behavior
+    }
+}, { passive: false }); // Add this options object
 
-        // Adjust the targetAnimationTime based on deltaY and scroll direction
-        targetAnimationTime -= deltaY * 0.001;
-        if (cameraAction) {
-            cameraAction.time = targetAnimationTime;
+
+function onPointerMove(e) {
+    if (isDragging) {
+        let clientX, clientY;
+
+        if (e.touches && e.touches.length === 1) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
         }
 
+        const deltaMove = {
+            x: clientX - previousMousePosition.x,
+            y: clientY - previousMousePosition.y
+        };
+
+        // Calculate the rotation angles
+        const deltaRotationY = -((reverseXRotation ? -1 : 1) * deltaMove.y * 0.005);
+        const deltaRotationX = -((reverseYRotation ? -1 : 1) * deltaMove.x * 0.005);
+
+        // Create quaternions for each axis rotation
+        const quaternionY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaRotationY);
+        const quaternionX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaRotationX);
+
+        // Combine the rotations
+        const quaternion = new THREE.Quaternion().multiplyQuaternions(quaternionY, quaternionX);
+
+        // Apply the rotation to planet1
+        planet1.quaternion.multiplyQuaternions(quaternion, planet1.quaternion);
+        planet2.quaternion.multiplyQuaternions(quaternion, planet2.quaternion);
+        planet3.quaternion.multiplyQuaternions(quaternion, planet3.quaternion);
+        planet4.quaternion.multiplyQuaternions(quaternion, planet4.quaternion);
+
+        previousMousePosition.x = clientX;
+        previousMousePosition.y = clientY;
+
+        e.preventDefault();
     }
-}, { passive: true });
+}
+
+function onPointerDown(e) {
+    if (e.touches && e.touches.length === 1) {
+        previousMousePosition.x = e.touches[0].clientX;
+        previousMousePosition.y = e.touches[0].clientY;
+    } else {
+        previousMousePosition.x = e.clientX;
+        previousMousePosition.y = e.clientY;
+    }
+}
+
+function onPointerUp() {
+    isDragging = false;
+}
+
+// Add event listeners for both touch and mouse events
+document.addEventListener('mousemove', onPointerMove, { passive: false });
+document.addEventListener('mousedown', onPointerDown, false);
+document.addEventListener('mouseup', onPointerUp, false);
+
+document.addEventListener('touchmove', onPointerMove, { passive: false });
+document.addEventListener('touchstart', onPointerDown, false);
+document.addEventListener('touchend', onPointerUp, false);
 
 
 document.addEventListener('touchend', () => {
-    console.log('Touch ended');
+    isTouching = false;
+    isDragging = false;
 
     // Final touch position
     const finalTouchPositionX = mouse.x;
     const finalTouchPositionY = mouse.y;
-    console.log(`Final touch position: ${finalTouchPositionX} ${finalTouchPositionY}`);
 
     // Final planet rotation quaternion
     const finalQuaternion = planet1.quaternion.toArray().map(value => value.toFixed(6)).join(' ');
-    console.log(`Final planet rotation: ${finalQuaternion}`);
-});
+    lastTouchY = 0;
+}, { passive: false });
 
 
 
@@ -177,7 +228,7 @@ document.addEventListener('touchend', () => {
 // const raycaster = new THREE.Raycaster();
 // const mouse = new THREE.Vector2();
 
-document.addEventListener('click', event => {
+document.addEventListener('mousedown', event => {
     // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -189,10 +240,42 @@ document.addEventListener('click', event => {
     const intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
-        // Log the name or id of the first intersected object
-        console.log('Clicked on:', intersects[0].object.name || intersects[0].object.id);
-        
+        const clickedObject = intersects[0].object;
+        console.log(`Clicked on object: ${clickedObject.name}`);
+
+        let parentGroup = clickedObject.parent;
+        console.log(parentGroup);
+        while (parentGroup && !(parentGroup instanceof THREE.Group)) {
+            parentGroup = parentGroup.parent;
+        }
+
+        if (parentGroup) {
+            console.log(`Parent group: ${parentGroup.name}`);
+
+            const planetNames = ['planet_1', 'planet_2', 'planet_3', 'planet_4'];
+            if (planetNames.includes(parentGroup.name)) {
+                isDragging = true;
+                previousMousePosition.x = event.clientX;
+                previousMousePosition.y = event.clientY;
+                console.log(`isDragging: ${isDragging}`);
+                console.log(`Previous mouse position: x=${previousMousePosition.x}, y=${previousMousePosition.y}`);
+            } else {
+                console.log(`Parent group ${parentGroup.name} is not in the list of planet names.`);
+            }
+        } else {
+            console.log('No parent group found.');
+        }
+
         lastRenderTime = performance.now(); // Update lastRenderTime
+    } else {
+        console.log('No intersections found.');
+    }
+});
+
+document.addEventListener('mouseup', event => {
+    if (isDragging) {
+        isDragging = false;
+        console.log(`isDragging: ${isDragging}`);
     }
 });
 
@@ -201,8 +284,14 @@ function animate() {
     const deltaTime = performance.now() - lastRenderTime;
     if (deltaTime >= 1000 / 60) {
         const delta = clock.getDelta();
-        if (mixer) mixer.setTime(currentAnimationTime += (targetAnimationTime - currentAnimationTime) * 0.05);
-        if (planet1 && !isDragging) planet1.rotation.x += 0.01; // Rotate planet_1 around X-axis
+        if (mixer) {
+            currentAnimationTime += (targetAnimationTime - currentAnimationTime) * 0.05;
+            mixer.setTime(currentAnimationTime);
+        }
+        if (planet1 && !isDragging) planet1.rotation.x += 0.01;
+        if (planet2 && !isDragging) planet2.rotation.x += 0.01;
+        if (planet3 && !isDragging) planet3.rotation.x += 0.01;
+        if (planet4 && !isDragging) planet4.rotation.x += 0.01;
         controls.update();
         renderer.render(scene, camera);
         frames++;
@@ -252,14 +341,40 @@ setTimeout(() => { window.dispatchEvent(new Event('orientationchange')); }, 100)
 function onMouseDown(event) {
     updateMouse(event);
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(planet1);
+
+    const intersects = raycaster.intersectObjects(scene.children, true);
+
     if (intersects.length > 0) {
-        console.log('Clicked on planet_1');
-        isDragging = true;
-        previousMousePosition.x = event.clientX;
-        previousMousePosition.y = event.clientY;
+        const clickedObject = intersects[0].object;
+        console.log(`Clicked on object: ${clickedObject.name}`);
+
+        let parentGroup = clickedObject.parent;
+        console.log(parentGroup)
+        while (parentGroup && !(parentGroup instanceof THREE.Group)) {
+            parentGroup = parentGroup.parent;
+        }
+
+        if (parentGroup) {
+            console.log(`Parent group: ${parentGroup.name}`);
+
+            const planetNames = ['planet_1', 'planet_2', 'planet_3', 'planet_4'];
+            if (planetNames.includes(parentGroup.name)) {
+                isDragging = true;
+                previousMousePosition.x = event.clientX;
+                previousMousePosition.y = event.clientY;
+                console.log(`isDragging: ${isDragging}`);
+                console.log(`Previous mouse position: x=${previousMousePosition.x}, y=${previousMousePosition.y}`);
+            } else {
+                console.log(`Parent group ${parentGroup.name} is not in the list of planet names.`);
+            }
+        } else {
+            console.log('No parent group found.');
+        }
+    } else {
+        console.log('No intersections found.');
     }
 }
+
 
 function onMouseMove(event) {
     if (isDragging) {
@@ -293,12 +408,25 @@ function onTouchStart(e) {
     if (e.touches.length === 1) {
         updateMouse(e.touches[0]);
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObject(planet1);
-        if (intersects.length > 0) {
-            console.log('Touched planet_1');
-            isDragging = true;
-            previousMousePosition.x = e.touches[0].clientX;
-            previousMousePosition.y = e.touches[0].clientY;
+
+        // List of planets to check
+        const planets = [planet1, planet2, planet3, planet4];
+        let planetTouched = false;
+
+        for (const planet of planets) {
+            const intersects = raycaster.intersectObject(planet);
+            if (intersects.length > 0) {
+                console.log(`Touched ${planet.name}`);
+                isDragging = true;
+                previousMousePosition.x = e.touches[0].clientX;
+                previousMousePosition.y = e.touches[0].clientY;
+                planetTouched = true;
+                break; // Exit the loop once a planet is touched
+            }
+        }
+
+        if (!planetTouched) {
+            isDragging = false;
         }
     }
 }
@@ -323,6 +451,15 @@ function onTouchMove(e) {
         // Apply rotation to planet1
         planet1.rotation.x += deltaRotation.y;
         planet1.rotation.y += deltaRotation.x;
+        
+        planet2.rotation.x += deltaRotation.y;
+        planet2.rotation.y += deltaRotation.x;
+        
+        planet3.rotation.x += deltaRotation.y;
+        planet3.rotation.y += deltaRotation.x;
+        
+        planet4.rotation.x += deltaRotation.y;
+        planet4.rotation.y += deltaRotation.x;
 
         previousMousePosition.x = e.touches[0].clientX;
         previousMousePosition.y = e.touches[0].clientY;
