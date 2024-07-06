@@ -194,3 +194,7 @@
 
 // // Call updateDebugPanel initially to display the initial values
 // updateDebugPanel();
+
+// content.js
+
+

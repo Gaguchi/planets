@@ -78,14 +78,16 @@ let isDragging = false;
 let lastTouchY = 0;
 
 document.addEventListener('wheel', event => {
+    checkPlanetInView();
     if (cameraAction && !isDragging) {
-        targetAnimationTime += event.deltaY * 0.001;
+        targetAnimationTime += event.deltaY * 0.0005;
         cameraAction.time = targetAnimationTime;
     }
 });
 
 // New scroll event listener
 document.addEventListener('scroll', (event) => {
+    checkPlanetInView();
     if (cameraAction && !isDragging) {
         targetAnimationTime += window.scrollY * 0.001;
         cameraAction.time = targetAnimationTime;
@@ -130,6 +132,7 @@ document.addEventListener('touchstart', event => {
 
 // New touchmove event listener
 document.addEventListener('touchmove', event => {
+    checkPlanetInView();
     if (!isDragging && cameraAction) {
         const touch = event.touches[0];
         const deltaY = touch.clientY - lastTouchY;
@@ -276,6 +279,46 @@ document.addEventListener('mouseup', event => {
     }
 });
 
+
+const sectionVisibility = {
+    section_1_start: false,
+    section_2_start: false,
+    section_3_start: false,
+    section_4_start: false,
+};
+
+export const checkPlanetInView = () => {
+    const frustum = new THREE.Frustum();
+    const cameraViewProjectionMatrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+
+    for (let i = 1; i <= 4; i++) {
+        const sectionStartName = `section_${i}_start`;
+
+        const sectionStart = scene.getObjectByName(sectionStartName);
+
+        if (sectionStart) {
+            const boxStart = new THREE.Box3().setFromObject(sectionStart);
+            const isStartVisible = frustum.intersectsBox(boxStart);
+            const panel = document.querySelector(`#section${i}`);
+            
+            if (isStartVisible && !sectionVisibility[sectionStartName]) {
+                console.log(`${sectionStartName} appeared on the screen`);
+                panel.classList.add('visible', 'enter');
+                panel.classList.remove('exit');
+            } else if (!isStartVisible && sectionVisibility[sectionStartName]) {
+                console.log(`${sectionStartName} left the screen`);
+                panel.classList.add('exit');
+                setTimeout(() => {
+                    panel.classList.remove('visible', 'enter');
+                }, 1000); // Wait for 1 second before removing 'visible' and 'enter' classes
+            }
+            sectionVisibility[sectionStartName] = isStartVisible;
+        }
+    }
+};
+
+
 function animate() {
     requestAnimationFrame(animate);
     const deltaTime = performance.now() - lastRenderTime;
@@ -304,22 +347,15 @@ function animate() {
         document.getElementById('fps').innerText = `FPS: ${fps}`;
         lastRenderTime = performance.now();
     }
+    // Check if the planet is in view
+    checkPlanetInView();
 }
 animate();
 
-export const checkPlanetInView = () => {
-    const frustum = new THREE.Frustum();
-    const cameraViewProjectionMatrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
-    const planet3 = scene.getObjectByName('planet_3');
-    if (planet3) {
-        const box = new THREE.Box3().setFromObject(planet3);
-        console.log(frustum.intersectsBox(box) ? "planet 3 is on the screen" : "planet 3 is not on the screen");
-    } else {
-        console.log("planet_3 is undefined");
-    }
-}
+
+// Attach checkPlanetInView to the scroll event
 window.addEventListener('scroll', checkPlanetInView);
+
 
 window.addEventListener('resize', onResize);
 window.addEventListener('resize orientationchange', debounce(() => {
