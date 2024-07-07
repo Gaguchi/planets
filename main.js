@@ -12,7 +12,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.domElement.style.cssText = 'position:fixed; top:0px; z-index:-1;';
 document.body.appendChild(renderer.domElement);
-
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enabled = false;
 
@@ -77,6 +76,8 @@ let targetAnimationTime = 0, currentAnimationTime = 0, fps = 0, frames = 0, last
 let isDragging = false;
 let lastTouchY = 0;
 
+
+
 document.addEventListener('wheel', event => {
     checkPlanetInView();
     if (cameraAction && !isDragging) {
@@ -95,6 +96,13 @@ document.addEventListener('scroll', (event) => {
 });
 
 document.addEventListener('touchstart', event => {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+        return;
+    }
+    if (isTouching) return; // Ignore if already touching
+    isTouching = true;
+
     const touch = event.touches[0];
     lastTouchY = touch.clientY;
 
@@ -132,6 +140,10 @@ document.addEventListener('touchstart', event => {
 
 // New touchmove event listener
 document.addEventListener('touchmove', event => {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+        return;
+    }
     checkPlanetInView();
     if (!isDragging && cameraAction) {
         const touch = event.touches[0];
@@ -141,10 +153,38 @@ document.addEventListener('touchmove', event => {
         lastTouchY = touch.clientY;
         event.preventDefault(); // Prevent default scrolling behavior
     }
-}, { passive: false }); // Add this options object
+}, { passive: false }); 
+
+document.addEventListener('touchend', event => {
+    if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
+        return;
+    }
+    isTouching = false;
+    isDragging = false;
+
+    // Final touch position
+    // const finalTouchPositionX = mouse.x;
+    // const finalTouchPositionY = mouse.y;
+
+    // // Final planet rotation quaternion
+    // const finalQuaternion = planet1.quaternion.toArray().map(value => value.toFixed(6)).join(' ');
+
+    // Example usage of the variables
+}, { passive: false });
+
+
+
+document.addEventListener('touchmove', onPointerMove, { passive: false });
+document.addEventListener('touchstart', onPointerDown, { passive: false });
+document.addEventListener('touchend', onPointerUp, { passive: false });
 
 
 function onPointerMove(e) {
+    if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+        return;
+    }
     if (isDragging) {
         let clientX, clientY;
 
@@ -186,6 +226,11 @@ function onPointerMove(e) {
 }
 
 function onPointerDown(e) {
+    if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+        return;
+    }
+
     if (e.touches && e.touches.length === 1) {
         previousMousePosition.x = e.touches[0].clientX;
         previousMousePosition.y = e.touches[0].clientY;
@@ -204,31 +249,14 @@ document.addEventListener('mousemove', onPointerMove, { passive: false });
 document.addEventListener('mousedown', onPointerDown, false);
 document.addEventListener('mouseup', onPointerUp, false);
 
-document.addEventListener('touchmove', onPointerMove, { passive: false });
-document.addEventListener('touchstart', onPointerDown, false);
-document.addEventListener('touchend', onPointerUp, false);
-
-
-document.addEventListener('touchend', () => {
-    isTouching = false;
-    isDragging = false;
-
-    // Final touch position
-    const finalTouchPositionX = mouse.x;
-    const finalTouchPositionY = mouse.y;
-
-    // Final planet rotation quaternion
-    const finalQuaternion = planet1.quaternion.toArray().map(value => value.toFixed(6)).join(' ');
-    lastTouchY = 0;
-}, { passive: false });
-
-
-
-
 // const raycaster = new THREE.Raycaster();
 // const mouse = new THREE.Vector2();
 
 document.addEventListener('mousedown', event => {
+    if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
+        return;
+    }
     // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -365,13 +393,19 @@ window.addEventListener('resize orientationchange', debounce(() => {
     checkPreloader();
 }, 250));
 
-document.addEventListener('touchstart', onTouchStart, false);
+document.addEventListener('touchstart', onTouchStart, { passive: false });
 document.addEventListener('touchmove', onTouchMove, { passive: false });
-document.addEventListener('touchend', () => { isTouching = false; isDragging = false; }, false);
+document.addEventListener('touchend', onTouchEnd, { passive: true });
 
 setTimeout(() => { window.dispatchEvent(new Event('orientationchange')); }, 100);
 
 function onMouseDown(event) {
+    // Ignore multi-touch events
+    if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
+        return;
+    }
+
     updateMouse(event);
     raycaster.setFromCamera(mouse, camera);
 
@@ -410,6 +444,10 @@ function onMouseDown(event) {
 
 
 function onMouseMove(event) {
+    if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+        return;
+    }
     if (isDragging) {
         const deltaMove = {
             x: (event.clientX - previousMousePosition.x) * -1,
@@ -438,6 +476,11 @@ function onMouseUp() {
 }
 
 function onTouchStart(e) {
+    if (e.touches.length > 1) {
+        // Ignore multi-touch events, but don't prevent default
+        return;
+    }
+
     if (e.touches.length === 1) {
         updateMouse(e.touches[0]);
         raycaster.setFromCamera(mouse, camera);
@@ -447,7 +490,7 @@ function onTouchStart(e) {
         let planetTouched = false;
 
         for (const planet of planets) {
-            const intersects = raycaster.intersectObject(planet);
+            const intersects = raycaster.intersectObject(planet, true);
             if (intersects.length > 0) {
                 console.log(`Touched ${planet.name}`);
                 isDragging = true;
@@ -469,6 +512,11 @@ let reverseYRotation = false;
 let reverseXRotation = false;
 
 function onTouchMove(e) {
+    if (e.touches.length > 1) {
+        // Ignore multi-touch events, but don't prevent default
+        return;
+    }
+
     if (isDragging && e.touches.length === 1) {
         const deltaMove = {
             x: e.touches[0].clientX - previousMousePosition.x,
@@ -481,24 +529,25 @@ function onTouchMove(e) {
             x: -((reverseYRotation ? -1 : 1) * deltaMove.y * 0.005)
         };
 
-        // Apply rotation to planet1
-        planet1.rotation.x += deltaRotation.y;
-        planet1.rotation.y += deltaRotation.x;
-        
-        planet2.rotation.x += deltaRotation.y;
-        planet2.rotation.y += deltaRotation.x;
-        
-        planet3.rotation.x += deltaRotation.y;
-        planet3.rotation.y += deltaRotation.x;
-        
-        planet4.rotation.x += deltaRotation.y;
-        planet4.rotation.y += deltaRotation.x;
+        // Apply rotation to all planets
+        [planet1, planet2, planet3, planet4].forEach(planet => {
+            if (planet) {
+                planet.rotation.x += deltaRotation.y;
+                planet.rotation.y += deltaRotation.x;
+            }
+        });
 
         previousMousePosition.x = e.touches[0].clientX;
         previousMousePosition.y = e.touches[0].clientY;
 
         e.preventDefault();
     }
+}
+
+function onTouchEnd(e) {
+    isDragging = false;
+    isTouching = false;
+    // No need to prevent default here
 }
 
 
