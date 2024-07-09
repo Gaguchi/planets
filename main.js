@@ -20,6 +20,36 @@ dracoLoader.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
+const videoSources = [
+    'models/textures/3D-Vid-Laptop.mp4',
+    'models/textures/3D-Vid-Laptop.mp4',
+    'models/textures/3D-Vid-Laptop.mp4',
+    'models/textures/3D-Vid-Laptop.mp4',
+    'models/textures/3D-Vid-Laptop.mp4',
+    'models/textures/3D-Vid-Laptop.mp4',
+    'models/textures/3D-Vid-Laptop.mp4'
+];
+
+const videos = [];
+const videoTextures = [];
+
+videoSources.forEach((src, index) => {
+    const video = document.createElement('video');
+    video.src = src;
+    video.load();
+    video.loop = true;
+    video.muted = true;
+    video.setAttribute('playsinline', '');
+    video.play();
+    videos.push(video);
+
+    const videoTexture = new THREE.VideoTexture(video);
+    videoTexture.minFilter = THREE.LinearFilter;
+    videoTexture.magFilter = THREE.LinearFilter;
+    videoTexture.format = THREE.RGBFormat;
+    videoTextures.push(videoTexture);
+});
+
 let mixer, sphereMixer, cameraAction, planet1, planet2, planet3, planet4, assetsLoaded = false, windowResized = false;
 
 const raycaster = new THREE.Raycaster();
@@ -37,6 +67,19 @@ loader.load('models/planets.glb', function (gltf) {
         if (object.name === 'planet_2') planet2 = object;
         if (object.name === 'planet_3') planet3 = object;
         if (object.name === 'planet_4') planet4 = object;
+
+        for (let i = 1; i <= 7; i++) {
+            if (object.name === `Laptop_0${i}`) {
+                // Debugging: Check if the object is found
+                console.log(`Laptop_0${i} found:`, object);
+
+                // Apply the video texture to the material
+                object.material = new THREE.MeshBasicMaterial({ map: videoTextures[i - 1] });
+
+                // Debugging: Check if the material is applied correctly
+                console.log(`Laptop_0${i} material:`, object.material);
+            }
+        }
     });
 
     if (gltf.animations && gltf.animations.length) {
@@ -45,7 +88,8 @@ loader.load('models/planets.glb', function (gltf) {
         const sphereAnimations = [
             { name: 'ship_animation_01', speed: 10 },
             { name: 'signAnimation', speed: 10 },
-            { name: 'RnMAction', speed: 12 }
+            { name: 'RnMAction', speed: 12 },
+            { name: 'planet_spin_3', speed: 10 }
         ];
         gltf.animations.forEach((clip) => {
             if (clip.name === 'CameraAction') {
@@ -358,9 +402,17 @@ function animate() {
         }
         if (planet1 && !isDragging) planet1.rotation.x += 0.01;
         if (planet2 && !isDragging) planet2.rotation.x += 0.01;
-        if (planet3 && !isDragging) planet3.rotation.x += 0.01;
+        //if (planet3 && !isDragging) planet3.rotation.x += 0.01;
         if (planet4 && !isDragging) planet4.rotation.x += 0.01;
         controls.update();
+        
+            // Update the video textures
+        videos.forEach((video, index) => {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                videoTextures[index].needsUpdate = true;
+            }
+        });
+        
         renderer.render(scene, camera);
         frames++;
         if (sphereMixer) {
