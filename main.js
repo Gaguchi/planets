@@ -20,37 +20,59 @@ dracoLoader.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
-const videoSources = [
-    'models/textures/3D-Vid-Laptop.mp4',
-    'models/textures/3D-Vid-Laptop.mp4',
-    'models/textures/3D-Vid-Laptop.mp4',
-    'models/textures/3D-Vid-Laptop.mp4',
-    'models/textures/3D-Vid-Laptop.mp4',
-    'models/textures/3D-Vid-Laptop.mp4',
-    'models/textures/3D-Vid-Laptop.mp4'
+const laptopVideoSources = [
+    'models/textures/Laptop_1.mp4',
+    'models/textures/Laptop_2.mp4',
+    'models/textures/Laptop_3.mp4',
+    'models/textures/Laptop_4.mp4',
+    'models/textures/Laptop_5.mp4',
+    'models/textures/Laptop_6.mp4',
+    'models/textures/Laptop_7.mp4'
+];
+
+const tabletVideoSources = [
+    'models/textures/Tablet_1.mp4',
+    'models/textures/Tablet_2.mp4',
+    'models/textures/Tablet_3.mp4',
+    'models/textures/Tablet_4.mp4',
+    'models/textures/Tablet_5.mp4',
+    'models/textures/Tablet_6.mp4'
+];
+
+const mobileVideoSources = [
+    'models/textures/Mobile_1.mp4',
+    'models/textures/Mobile_2.mp4',
+    'models/textures/Mobile_3.mp4',
+    'models/textures/Mobile_4.mp4'
 ];
 
 const videos = [];
 const videoTextures = [];
 
-videoSources.forEach((src, index) => {
-    const video = document.createElement('video');
-    video.src = src;
-    video.load();
-    video.loop = true;
-    video.muted = true;
-    video.setAttribute('playsinline', '');
-    video.play();
-    videos.push(video);
+const createVideoTextures = (sources) => {
+    sources.forEach((src, index) => {
+        const video = document.createElement('video');
+        video.src = src;
+        video.load();
+        video.loop = true;
+        video.muted = true;
+        video.setAttribute('playsinline', '');
+        video.play();
+        videos.push(video);
 
-    const videoTexture = new THREE.VideoTexture(video);
-    videoTexture.minFilter = THREE.LinearFilter;
-    videoTexture.magFilter = THREE.LinearFilter;
-    videoTexture.format = THREE.RGBFormat;
-    videoTextures.push(videoTexture);
-});
+        const videoTexture = new THREE.VideoTexture(video);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.format = THREE.RGBFormat;
+        videoTextures.push(videoTexture);
+    });
+};
 
-let mixer, sphereMixer, cameraAction, planet1, planet2, planet3, planet4, assetsLoaded = false, windowResized = false;
+createVideoTextures(laptopVideoSources);
+createVideoTextures(tabletVideoSources);
+createVideoTextures(mobileVideoSources);
+
+let mixer, sphereMixer, cameraAction, planet1, planet2, planet4, assetsLoaded = false, windowResized = false;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -65,19 +87,30 @@ loader.load('models/planets.glb', function (gltf) {
         if (object.isCamera) camera = object;
         if (object.name === 'planet_1') planet1 = object;
         if (object.name === 'planet_2') planet2 = object;
-        if (object.name === 'planet_3') planet3 = object;
+        //if (object.name === 'planet_3') planet3 = object;
         if (object.name === 'planet_4') planet4 = object;
 
         for (let i = 1; i <= 7; i++) {
-            if (object.name === `Laptop_0${i}`) {
-                // Debugging: Check if the object is found
-                console.log(`Laptop_0${i} found:`, object);
-
-                // Apply the video texture to the material
+            if (object.name === `Laptop_${i}`) {
+                console.log(`Laptop_${i} found:`, object);
                 object.material = new THREE.MeshBasicMaterial({ map: videoTextures[i - 1] });
+                console.log(`Laptop_${i} material:`, object.material);
+            }
+        }
 
-                // Debugging: Check if the material is applied correctly
-                console.log(`Laptop_0${i} material:`, object.material);
+        for (let i = 1; i <= 6; i++) {
+            if (object.name === `Tablet_${i}`) {
+                console.log(`Tablet_${i} found:`, object);
+                object.material = new THREE.MeshBasicMaterial({ map: videoTextures[7 + i - 1] });
+                console.log(`Tablet_${i} material:`, object.material);
+            }
+        }
+
+        for (let i = 1; i <= 4; i++) {
+            if (object.name === `Mobile_${i}`) {
+                console.log(`Mobile_${i} found:`, object);
+                object.material = new THREE.MeshBasicMaterial({ map: videoTextures[13 + i - 1] });
+                console.log(`Mobile_${i} material:`, object.material);
             }
         }
     });
@@ -89,7 +122,7 @@ loader.load('models/planets.glb', function (gltf) {
             { name: 'ship_animation_01', speed: 10 },
             { name: 'signAnimation', speed: 10 },
             { name: 'RnMAction', speed: 12 },
-            { name: 'planet_spin_3', speed: 10 }
+            { name: 'planet_spin_3', speed: 2 }
         ];
         gltf.animations.forEach((clip) => {
             if (clip.name === 'CameraAction') {
@@ -259,7 +292,7 @@ function onPointerMove(e) {
         // Apply the rotation to planet1
         planet1.quaternion.multiplyQuaternions(quaternion, planet1.quaternion);
         planet2.quaternion.multiplyQuaternions(quaternion, planet2.quaternion);
-        planet3.quaternion.multiplyQuaternions(quaternion, planet3.quaternion);
+        //planet3.quaternion.multiplyQuaternions(quaternion, planet3.quaternion);
         planet4.quaternion.multiplyQuaternions(quaternion, planet4.quaternion);
 
         previousMousePosition.x = clientX;
@@ -538,7 +571,7 @@ function onTouchStart(e) {
         raycaster.setFromCamera(mouse, camera);
 
         // List of planets to check
-        const planets = [planet1, planet2, planet3, planet4];
+        const planets = [planet1, planet2, planet4];
         let planetTouched = false;
 
         for (const planet of planets) {
@@ -582,7 +615,7 @@ function onTouchMove(e) {
         };
 
         // Apply rotation to all planets
-        [planet1, planet2, planet3, planet4].forEach(planet => {
+        [planet1, planet2, planet4].forEach(planet => {
             if (planet) {
                 planet.rotation.x += deltaRotation.y;
                 planet.rotation.y += deltaRotation.x;
