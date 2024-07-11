@@ -50,7 +50,7 @@ const videos = [];
 const videoTextures = [];
 
 const createVideoTextures = (sources) => {
-    sources.forEach((src, index) => {
+    sources.forEach((src) => {
         const video = document.createElement('video');
         video.src = src;
         video.load();
