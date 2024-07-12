@@ -21,7 +21,7 @@ const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
 const laptopVideoSources = [
-    'models/textures/Laptop_1.mp4',
+    'models/textures/Latop_1_2.mp4',
     'models/textures/Laptop_2.mp4',
     'models/textures/Laptop_3.mp4',
     'models/textures/Laptop_4.mp4',
