@@ -238,7 +238,7 @@ document.addEventListener('touchend', event => {
         return;
     }
     isTouching = false;
-    isDragging = false;
+    isDragging = false;s
 
     // Final touch position
     // const finalTouchPositionX = mouse.x;
@@ -248,6 +248,13 @@ document.addEventListener('touchend', event => {
     // const finalQuaternion = planet1.quaternion.toArray().map(value => value.toFixed(6)).join(' ');
 
     // Example usage of the variables
+    function openResume() {
+        window.open('path/to/your/resume.pdf', '_blank');
+    }
+
+    function openContacts() {
+        window.location.href = 'path/to/your/contact/page.html';
+    }
 }, { passive: false });
 
 
