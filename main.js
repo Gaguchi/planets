@@ -238,7 +238,7 @@ document.addEventListener('touchend', event => {
         return;
     }
     isTouching = false;
-    isDragging = false;s
+    isDragging = false;
 
     // Final touch position
     // const finalTouchPositionX = mouse.x;
@@ -300,7 +300,14 @@ function onPointerMove(e) {
         planet1.quaternion.multiplyQuaternions(quaternion, planet1.quaternion);
         planet2.quaternion.multiplyQuaternions(quaternion, planet2.quaternion);
         //planet3.quaternion.multiplyQuaternions(quaternion, planet3.quaternion);
-        planet4.quaternion.multiplyQuaternions(quaternion, planet4.quaternion);
+
+        // Create a new quaternion for planet4 with reversed rotation
+        const quaternionY4 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaRotationY);
+        const quaternionX4 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), deltaRotationX);
+        const quaternion4 = new THREE.Quaternion().multiplyQuaternions(quaternionY4, quaternionX4);
+
+        // Apply the new quaternion to planet4
+        planet4.quaternion.multiplyQuaternions(quaternion4, planet4.quaternion);
 
         previousMousePosition.x = clientX;
         previousMousePosition.y = clientY;
@@ -536,8 +543,9 @@ function onMouseDown(event) {
 
 
 function onMouseMove(event) {
-    if (e.touches && e.touches.length > 1) {
-        e.preventDefault();
+    console.log('Mouse move event');
+    if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
         return;
     }
     if (isDragging) {
@@ -554,7 +562,20 @@ function onMouseMove(event) {
                 'XYZ'
             ));
 
+        // Check if planet4 is being dragged and reverse the interaction
+        if (planet4 && planet4.isDragging) {
+            console.log('Dragging planet4');
+            deltaRotationQuaternion.setFromEuler(new THREE.Euler(
+                -deltaMove.y * 0.005, // Reverse rotation along X-axis
+                -deltaMove.x * 0.005, // Reverse rotation along Y-axis
+                0,
+                'XYZ'
+            ));
+        }
+
         planet1.quaternion.multiplyQuaternions(deltaRotationQuaternion, planet1.quaternion);
+        planet2.quaternion.multiplyQuaternions(deltaRotationQuaternion, planet2.quaternion);
+        planet4.quaternion.multiplyQuaternions(deltaRotationQuaternion, planet4.quaternion);
 
         previousMousePosition.x = event.clientX;
         previousMousePosition.y = event.clientY;
