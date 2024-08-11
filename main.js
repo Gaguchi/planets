@@ -4,6 +4,10 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import './style.css';
 
+function isMobileDevice() {
+    return /Mobi|Android/i.test(navigator.userAgent);
+}
+
 document.body.innerHTML += '<div id="fps" style="position: absolute; top: 10px; left: 10px; color: white;"></div>';
 
 const scene = new THREE.Scene();
@@ -45,6 +49,7 @@ const mobileVideoSources = [
     'models/textures/Mobile_3.mp4',
     'models/textures/Mobile_4.mp4'
 ];
+
 
 const videos = [];
 const videoTextures = [];
