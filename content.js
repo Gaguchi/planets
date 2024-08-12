@@ -198,3 +198,21 @@
 // content.js
 
 
+document.addEventListener('DOMContentLoaded', function() {
+    const hamburger = document.querySelector('.hamburger-menu');
+    const fullScreenMenu = document.querySelector('.full-screen-menu');
+    
+    hamburger.addEventListener('click', function() {
+      this.classList.toggle('active');
+      fullScreenMenu.classList.toggle('active');
+    });
+
+    // Close menu when a link is clicked
+    const menuLinks = document.querySelectorAll('.full-screen-menu nav ul li a');
+    menuLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('active');
+        fullScreenMenu.classList.remove('active');
+      });
+    });
+  });
