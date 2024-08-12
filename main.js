@@ -34,6 +34,16 @@ const laptopVideoSources = [
     'models/textures/Laptop_7.mp4'
 ];
 
+const laptopImageSources = [
+    'models/textures/Latop_1_2.mp4',
+    'models/textures/Laptop_2.mp4',
+    'models/textures/Laptop_3.mp4',
+    'models/textures/Laptop_4.mp4',
+    'models/textures/Laptop_5.mp4',
+    'models/textures/Laptop_6.mp4',
+    'models/textures/Laptop_7.mp4'
+];
+
 const tabletVideoSources = [
     'models/textures/Tablet_1.mp4',
     'models/textures/Tablet_2.mp4',
@@ -43,7 +53,23 @@ const tabletVideoSources = [
     'models/textures/Tablet_6.mp4'
 ];
 
+const tabletImageSources = [
+    'models/textures/Tablet_1.mp4',
+    'models/textures/Tablet_2.mp4',
+    'models/textures/Tablet_3.mp4',
+    'models/textures/Tablet_4.mp4',
+    'models/textures/Tablet_5.mp4',
+    'models/textures/Tablet_6.mp4'
+];
+
 const mobileVideoSources = [
+    'models/textures/Mobile_1.mp4',
+    'models/textures/Mobile_2.mp4',
+    'models/textures/Mobile_3.mp4',
+    'models/textures/Mobile_4.mp4'
+];
+
+const mobileImageSources = [
     'models/textures/Mobile_1.mp4',
     'models/textures/Mobile_2.mp4',
     'models/textures/Mobile_3.mp4',
