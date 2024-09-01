@@ -77,6 +77,8 @@ const mobileImageSources = [
 ];
 
 
+
+
 const videos = [];
 const videoTextures = [];
 
@@ -178,6 +180,8 @@ loader.load('models/planets.glb', function (gltf) {
     assetsLoaded = true;
     checkPreloader();
 }, undefined, console.error);
+
+
 
 const clock = new THREE.Clock();
 let targetAnimationTime = 0, currentAnimationTime = 0, fps = 0, frames = 0, lastTime = performance.now();
@@ -372,55 +376,62 @@ document.addEventListener('mousedown', onPointerDown, false);
 document.addEventListener('mouseup', onPointerUp, false);
 
 // const raycaster = new THREE.Raycaster();
-// const mouse = new THREE.Vector2();
 
-document.addEventListener('mousedown', event => {
-    if (event.touches && event.touches.length > 1) {
-        event.preventDefault();
-        return;
-    }
-    // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    // Update the raycaster with the camera and mouse position
-    raycaster.setFromCamera(mouse, camera);
-
-    // Calculate objects intersecting the ray
-    const intersects = raycaster.intersectObjects(scene.children, true);
-
-    if (intersects.length > 0) {
-        const clickedObject = intersects[0].object;
-        console.log(`Clicked on object: ${clickedObject.name}`);
-
-        let parentGroup = clickedObject.parent;
-        console.log(parentGroup);
-        while (parentGroup && !(parentGroup instanceof THREE.Group)) {
-            parentGroup = parentGroup.parent;
+    // Add the mousedown event listener
+    document.addEventListener('mousedown', event => {
+        // Check if the event target is the close button
+        if (event.target.id === 'closeContactButton') {
+            console.log('Close button mousedown event detected');
+            return; // Prevent further propagation
         }
 
-        if (parentGroup) {
-            console.log(`Parent group: ${parentGroup.name}`);
+        if (event.touches && event.touches.length > 1) {
+            event.preventDefault();
+            return;
+        }
 
-            const planetNames = ['planet_1', 'planet_2', 'planet_3', 'planet_4'];
-            if (planetNames.includes(parentGroup.name)) {
-                isDragging = true;
-                previousMousePosition.x = event.clientX;
-                previousMousePosition.y = event.clientY;
-                console.log(`isDragging: ${isDragging}`);
-                console.log(`Previous mouse position: x=${previousMousePosition.x}, y=${previousMousePosition.y}`);
-            } else {
-                console.log(`Parent group ${parentGroup.name} is not in the list of planet names.`);
+        // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Update the raycaster with the camera and mouse position
+        raycaster.setFromCamera(mouse, camera);
+
+        // Calculate objects intersecting the ray
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        if (intersects.length > 0) {
+            const clickedObject = intersects[0].object;
+            console.log(`Clicked on object: ${clickedObject.name}`);
+
+            let parentGroup = clickedObject.parent;
+            console.log(parentGroup);
+            while (parentGroup && !(parentGroup instanceof THREE.Group)) {
+                parentGroup = parentGroup.parent;
             }
-        } else {
-            console.log('No parent group found.');
-        }
 
-        lastRenderTime = performance.now(); // Update lastRenderTime
-    } else {
-        console.log('No intersections found.');
-    }
-});
+            if (parentGroup) {
+                console.log(`Parent group: ${parentGroup.name}`);
+
+                const planetNames = ['planet_1', 'planet_2', 'planet_3', 'planet_4'];
+                if (planetNames.includes(parentGroup.name)) {
+                    isDragging = true;
+                    previousMousePosition.x = event.clientX;
+                    previousMousePosition.y = event.clientY;
+                    console.log(`isDragging: ${isDragging}`);
+                    console.log(`Previous mouse position: x=${previousMousePosition.x}, y=${previousMousePosition.y}`);
+                } else {
+                    console.log(`Parent group ${parentGroup.name} is not in the list of planet names.`);
+                }
+            } else {
+                console.log('No parent group found.');
+            }
+
+            lastRenderTime = performance.now(); // Update lastRenderTime
+        } else {
+            console.log('No intersections found.');
+        }
+    });
 
 document.addEventListener('mouseup', event => {
     if (isDragging) {
@@ -469,6 +480,7 @@ export const checkPlanetInView = () => {
 };
 
 
+
 function animate() {
     requestAnimationFrame(animate);
     const deltaTime = performance.now() - lastRenderTime;
@@ -480,11 +492,10 @@ function animate() {
         }
         if (planet1 && !isDragging) planet1.rotation.x += 0.01;
         if (planet2 && !isDragging) planet2.rotation.x += 0.01;
-        //if (planet3 && !isDragging) planet3.rotation.x += 0.01;
         if (planet4 && !isDragging) planet4.rotation.x += 0.01;
         controls.update();
         
-            // Update the video textures
+        // Update the video textures
         videos.forEach((video, index) => {
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 videoTextures[index].needsUpdate = true;

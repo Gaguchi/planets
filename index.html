@@ -5,9 +5,10 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vite App</title>
+  <!-- Include jQuery from CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-
 
   <div class="hamburger-menu">
     <div class="bar"></div>
@@ -18,10 +19,8 @@
   <div class="full-screen-menu">
     <nav>
       <ul>
-        <li><a href="#section1">Home</a></li>
-        <li><a href="#section2">Education</a></li>
-        <li><a href="#section3">Projects</a></li>
-        <li><a href="#section4">Technologies</a></li>
+        <li><a href="#section1" onclick="openResume()">My Resume</a></li>
+        <li><a href="#section2" onclick="openContacts()">Contact Me</a></li>
       </ul>
     </nav>
   </div>
@@ -35,7 +34,7 @@
             <div class="modal-content">
                 <h2>Welcome to My Website</h2>
                 <div class="pixel-border"></div>
-                <p>Hello! I'm Boris Karaia, a web developer with over 7 years of experience. Dive into my work and learn more about my journey.</p>
+                <p>Hello! I'm Boris Karaia, a web developer with over  years of experience. Dive into my work and learn more about my journey.</p>
                 <div class="button-container">
                     <button onclick="openResume()">My Resume</button>
                     <button onclick="openContacts()">Contact Me</button>
@@ -82,11 +81,124 @@
           </div>
         </div>
       </section>
+      <section class="panel" id="sectionContact">
+        <div class="modal">
+          <div class="modal-content">
+            <button class="close-btn" id="closeContactButton">Close</button>
+            <h2>Contact Me</h2>
+            <div class="pixel-border"></div>
+            <p>If you have any questions or would like to get in touch, please fill out the form below:</p>
+            <form id="contactForm">
+              <label for="name">Name:</label>
+              <input type="text" id="name" name="name" required>
+              <label for="email">Email:</label>
+              <input type="email" id="email" name="email" required>
+              <label for="message">Message:</label>
+              <textarea id="message" name="message" required></textarea>
+              <button type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+      </section>
       <!-- Add more sections as needed -->
     </div>
     <!-- Element to display the current section name -->
     <div id="current-section"></div>
   </div>
+
+<script>
+    // Define the functions at the top
+    function openResume() {
+        const link = document.createElement('a');
+        link.href = 'path/to/your/resume.pdf'; // Update this path to your actual resume PDF file
+        link.download = 'Boris_Karaia_Resume.pdf'; // Update the file name as needed
+        link.click();
+    }
+
+    function openContacts() {
+        const contactSection = document.getElementById('sectionContact');
+        if (contactSection) {
+            contactSection.classList.add('visible', 'enter');
+            contactSection.classList.remove('exit');
+        }
+    }
+
+    function closeContacts() {
+        const contactSection = document.getElementById('sectionContact');
+        if (contactSection) {
+            contactSection.classList.add('exit');
+            setTimeout(() => {
+                contactSection.classList.remove('visible', 'enter');
+            }, 1000); // Wait for 1 second before removing 'visible' and 'enter' classes
+        }
+    }
+
+    // Function to handle close button click
+    function handleCloseButtonClick(event) {
+        console.log("Close button clicked");
+        const contactSection = document.getElementById('sectionContact');
+        if (contactSection) {
+            contactSection.classList.remove('enter');
+            contactSection.classList.add('exit');
+            setTimeout(() => {
+                contactSection.classList.remove('visible');
+            }, 1000); // Wait for 1 second before removing 'visible' class
+        }
+    }
+
+    // Ensure DOM is fully loaded before attaching event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const hamburger = document.querySelector('.hamburger');
+        const fullScreenMenu = document.querySelector('.full-screen-menu');
+
+        // Attach event listeners to buttons
+        const resumeButton = document.getElementById('resumeButton');
+        if (resumeButton) {
+            resumeButton.addEventListener('click', openResume);
+        }
+
+        const contactButton = document.getElementById('contactButton');
+        if (contactButton) {
+            contactButton.addEventListener('click', openContacts);
+        }
+
+        const closeContactButton = document.getElementById('closeContactButton');
+        if (closeContactButton) {
+            console.log("Attaching event listener to close button");
+            closeContactButton.addEventListener('click', handleCloseButtonClick);
+        } else {
+            console.log("Close button not found");
+        }
+
+        // Attach event listener to the contact form
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                // Change background color to green
+                document.getElementById('sectionContact').style.backgroundColor = 'green';
+                // Replace form with thank you message
+                document.getElementById('contactForm').outerHTML = '<h2>Thank You!</h2><p>Your message has been sent successfully.</p>';
+                
+                // Send AJAX request
+                $.ajax({
+                    url: 'send_email.php',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        console.log("Server response:", response);
+                    },
+                    error: function() {
+                        console.log("AJAX request failed");
+                    }
+                });
+            });
+        } else {
+            console.log("Contact form not found");
+        }
+    });
+</script>
+
   <script type="module" src="/main.js"></script>
   <script type="module" src="/content.js"></script>
 </body>
