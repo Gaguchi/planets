@@ -284,7 +284,7 @@ document.addEventListener('touchend', event => {
 
     // Example usage of the variables
     function openResume() {
-        window.open('path/to/your/resume.pdf', '_blank');
+        window.open('CV-BorisKaraia.pdf', '_blank');
     }
 
     function openContacts() {
