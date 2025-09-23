@@ -18,6 +18,11 @@ USER node
 
 # Build the app as non-root
 RUN npm run build
+
+# Ensure Three's Draco decoder is available in the built assets
+# Some parts of three reference the decoder at /node_modules/three/examples/jsm/libs/draco
+RUN mkdir -p dist/node_modules/three/examples/jsm/libs && \
+    cp -R node_modules/three/examples/jsm/libs dist/node_modules/three/examples/jsm/libs || true
 # Stage 2: Serve the compiled application with Nginx
 FROM nginx:1.26.2-alpine
 COPY --from=build-stage /app/dist /usr/share/nginx/html
