@@ -10,6 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.vscode/
+.DS_Store
+
+# Blender files and backups - not required in repo history
+**/*.blend
+**/*.blend1
 *.local
 
 # Editor directories and files

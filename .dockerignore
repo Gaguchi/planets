@@ -1,0 +1,15 @@
+# Ignore Blender files and backups — not needed in the final image
+**/*.blend
+**/*.blend1
+
+# Node / build artifacts
+node_modules
+dist
+build
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
