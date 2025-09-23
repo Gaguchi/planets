@@ -26,5 +26,7 @@ RUN mkdir -p dist/node_modules/three/examples/jsm/libs && \
 # Stage 2: Serve the compiled application with Nginx
 FROM nginx:1.26.2-alpine
 COPY --from=build-stage /app/dist /usr/share/nginx/html
+# Copy Three's example libs (draco, etc.) from build-stage node_modules into the final image
+COPY --from=build-stage /app/node_modules/three/examples/jsm/libs /usr/share/nginx/html/node_modules/three/examples/jsm/libs
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
